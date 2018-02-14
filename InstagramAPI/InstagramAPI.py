@@ -34,6 +34,10 @@ try:
 except:
     # Issue 159, python3 import fix
     from .ImageUtils import getImageSize
+try:
+    from Exception import UserNotFoundException, LoginFailedException, MediaNotFoundException
+except:
+    from .Exception import UserNotFoundException, LoginFailedException, MediaNotFoundException
 
 
 class InstagramAPI:
@@ -874,10 +878,16 @@ class InstagramAPI:
             try:
                 self.LastResponse = response
                 self.LastJson = json.loads(response.text)
-                print(self.LastJson)
-            except:
-                pass
-            return False
+                if self.LastResponse.status_code == 404 and self.LastJson.get('message') == 'User not found':
+                    raise UserNotFoundException(self.LastJson.get('message'))
+                elif self.LastResponse.status_code == 400 and (self.LastJson.get('message') == 'Media not found or unavailable' or self.LastJson.get('message') == 'Media is unavailable'):
+                    raise MediaNotFoundException(self.LastJson.get('message'))
+                else:
+                    raise Exception(self.LastJson.get('message', ''))
+            except (UserNotFoundException, MediaNotFoundException), e:
+                raise e
+            except Exception, e:
+                return False
 
     def getTotalFollowers(self, usernameId):
         followers = []
