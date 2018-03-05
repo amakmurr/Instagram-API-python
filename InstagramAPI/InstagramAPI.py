@@ -35,9 +35,9 @@ except:
     # Issue 159, python3 import fix
     from .ImageUtils import getImageSize
 try:
-    from Exception import UserNotFoundException, LoginFailedException, MediaNotFoundException, AccountBlockedException, PasswordIncorrectException, LimitReachedException
+    from Exception import UserNotFoundException, LoginFailedException, MediaNotFoundException, AccountBlockedException, PasswordIncorrectException, LimitReachedException, LoginRequired
 except:
-    from .Exception import UserNotFoundException, LoginFailedException, MediaNotFoundException, AccountBlockedException, PasswordIncorrectException, LimitReachedException
+    from .Exception import UserNotFoundException, LoginFailedException, MediaNotFoundException, AccountBlockedException, PasswordIncorrectException, LimitReachedException, LoginRequired
 
 class InstagramAPI:
     API_URL = 'https://i.instagram.com/api/v1/'
@@ -886,6 +886,8 @@ class InstagramAPI:
                         raise AccountBlockedException(self.LastJson.get('message'))
                     elif self.LastJson.get('message') == 'The password you entered is incorrect. Please try again.':
                         raise PasswordIncorrectException(self.LastJson.get('message'))
+                    elif self.LastJson.get('message') == 'login_required':
+                        raise LoginRequired(self.LastJson.get('message', ''))
                     else:
                         raise Exception(self.LastJson.get('message', ''))
                 elif self.LastResponse.status_code == 429 and self.LastJson.get('message') == 'Please wait a few minutes before you try again.':

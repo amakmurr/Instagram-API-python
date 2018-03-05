@@ -32,3 +32,9 @@ class LimitReachedException(Exception):
 
     def __init__(self, message):
         super(LimitReachedException, self).__init__(message)
+
+
+class LoginRequired(Exception):
+
+    def __init__(self, message):
+        super(LoginRequired, self).__init__(message)
