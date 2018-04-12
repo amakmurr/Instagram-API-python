@@ -38,3 +38,9 @@ class LoginRequired(Exception):
 
     def __init__(self, message):
         super(LoginRequired, self).__init__(message)
+
+
+class SentryBlockException(Exception):
+
+    def __init__(self, message):
+        super(SentryBlockException, self).__init__(message)

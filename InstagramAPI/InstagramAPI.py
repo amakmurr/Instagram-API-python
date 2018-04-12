@@ -35,11 +35,9 @@ except:
     # Issue 159, python3 import fix
     from .ImageUtils import getImageSize
 try:
-    from Exception import UserNotFoundException, LoginFailedException, MediaNotFoundException, AccountBlockedException, PasswordIncorrectException, LimitReachedException, LoginRequired
+    from Exception import UserNotFoundException, LoginFailedException, MediaNotFoundException, AccountBlockedException, PasswordIncorrectException, LimitReachedException, LoginRequired, SentryBlockException
 except:
-    from .Exception import UserNotFoundException, LoginFailedException, MediaNotFoundException, AccountBlockedException, PasswordIncorrectException, LimitReachedException, LoginRequired
-
-from .exceptions import SentryBlockException
+    from .Exception import UserNotFoundException, LoginFailedException, MediaNotFoundException, AccountBlockedException, PasswordIncorrectException, LimitReachedException, LoginRequired, SentryBlockException
 
 
 class InstagramAPI:
@@ -1000,20 +998,17 @@ class InstagramAPI:
                         return False
                     else:
                         raise LimitReachedException(self.LastJson.get('message', ''))
+                elif 'error_type' in self.LastJson and self.LastJson['error_type'] == 'sentry_block':
+                    raise SentryBlockException(self.LastJson.get('message'))
                 else:
                     raise Exception(self.LastJson.get('message', ''))
-            except (AccountBlockedException, PasswordIncorrectException), e:
+            except (AccountBlockedException, PasswordIncorrectException, SentryBlockException), e:
                 raise e
             except Exception, e:
                 if login:
                     return False
                 else:
                     raise e
-                print(self.LastJson)
-                if 'error_type' in self.LastJson and self.LastJson['error_type'] == 'sentry_block':
-                    raise SentryBlockException(self.LastJson['message'])
-            except SentryBlockException:
-                raise
             except:
                 pass
             return False
