@@ -1,5 +1,6 @@
 ﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from requests.cookies import cookiejar_from_dict
 
 import requests
 import random
@@ -86,6 +87,17 @@ class InstagramAPI:
             print('Set proxy!')
             proxies = {'http': proxy, 'https': proxy}
             self.s.proxies.update(proxies)
+
+    def set_session(self, **kwargs):
+        print('Set session!')
+        self.token = kwargs.get("token")
+        self.username_id = kwargs.get("username_id")
+        self.rank_token = kwargs.get("rank_token")
+        self.uuid = kwargs.get("uuid")
+        self.USER_AGENT = kwargs.get("user_agent")
+        self.device_id = kwargs.get("device_id")
+        self.s.cookies = cookiejar_from_dict(kwargs.get("session", {}))
+        self.isLoggedIn = True
 
     def login(self, force=False):
         if (not self.isLoggedIn or force):
