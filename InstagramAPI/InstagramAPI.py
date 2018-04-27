@@ -26,7 +26,6 @@ try:
     from moviepy.editor import VideoFileClip
 except ImportError:
     print("Fail to import moviepy. Need only for Video upload.")
-    
 
 # The urllib library was split into other modules from Python 2 to Python 3
 if sys.version_info.major == 3:
@@ -36,8 +35,10 @@ try:
 except:
     # Issue 159, python3 import fix
     from .ImageUtils import getImageSize
-
-from .exceptions import SentryBlockException
+try:
+    from Exception import UserNotFoundException, LoginFailedException, MediaNotFoundException, AccountBlockedException, PasswordIncorrectException, LimitReachedException, LoginRequired, SentryBlockException
+except:
+    from .Exception import UserNotFoundException, LoginFailedException, MediaNotFoundException, AccountBlockedException, PasswordIncorrectException, LimitReachedException, LoginRequired, SentryBlockException
 
 
 class InstagramAPI:
@@ -85,7 +86,7 @@ class InstagramAPI:
 
         if proxy is not None:
             print('Set proxy!')
-            proxies = {'http': proxy, 'https': proxy}
+            proxies = {'http': 'http://' + proxy, 'https': 'http://' + proxy}
             self.s.proxies.update(proxies)
 
     def set_session(self, **kwargs):
@@ -117,27 +118,27 @@ class InstagramAPI:
                     self.rank_token = "%s_%s" % (self.username_id, self.uuid)
                     self.token = self.LastResponse.cookies["csrftoken"]
 
-                    self.syncFeatures()
-                    self.autoCompleteUserList()
-                    self.timelineFeed()
-                    self.getv2Inbox()
-                    self.getRecentActivity()
+                    self.syncFeatures(True)
+                    self.autoCompleteUserList(True)
+                    self.timelineFeed(True)
+                    self.getv2Inbox(True)
+                    self.getRecentActivity(True)
                     print("Login success!\n")
                     return True
 
-    def syncFeatures(self):
+    def syncFeatures(self, login=False):
         data = json.dumps({'_uuid': self.uuid,
                            '_uid': self.username_id,
                            'id': self.username_id,
                            '_csrftoken': self.token,
                            'experiments': self.EXPERIMENTS})
-        return self.SendRequest('qe/sync/', self.generateSignature(data))
+        return self.SendRequest('qe/sync/', self.generateSignature(data), login=login)
 
-    def autoCompleteUserList(self):
-        return self.SendRequest('friendships/autocomplete_user_list/')
+    def autoCompleteUserList(self, login=False):
+        return self.SendRequest('friendships/autocomplete_user_list/', login=login)
 
-    def timelineFeed(self):
-        return self.SendRequest('feed/timeline/')
+    def timelineFeed(self, login=False):
+        return self.SendRequest('feed/timeline/', login=login)
 
     def megaphoneLog(self):
         return self.SendRequest('megaphone/log/')
@@ -399,7 +400,7 @@ class InstagramAPI:
             except:
                 pass
             return False
-    
+
     def direct_message(self, text, recipients):
         if type(recipients) != type([]):
             recipients = [str(recipients)]
@@ -441,7 +442,7 @@ class InstagramAPI:
         )
         #self.SendRequest(endpoint,post=data) #overwrites 'Content-type' header and boundary is missed
         response = self.s.post(self.API_URL + endpoint, data=data)
-        
+
         if response.status_code == 200:
             self.LastResponse = response
             self.LastJson = json.loads(response.text)
@@ -455,7 +456,7 @@ class InstagramAPI:
             except:
                 pass
             return False
-        
+
     def direct_share(self, media_id, recipients, text=None):
         if not isinstance(position, list):
             recipients = [str(recipients)]
@@ -668,16 +669,16 @@ class InstagramAPI:
     def getSelfSavedMedia(self):
         return self.SendRequest('feed/saved')
 
-    def getRecentActivity(self):
-        activity = self.SendRequest('news/inbox/?')
+    def getRecentActivity(self, login=False):
+        activity = self.SendRequest('news/inbox/?', login=login)
         return activity
 
     def getFollowingRecentActivity(self):
         activity = self.SendRequest('news/?')
         return activity
 
-    def getv2Inbox(self):
-        inbox = self.SendRequest('direct_v2/inbox/?')
+    def getv2Inbox(self, login=False):
+        inbox = self.SendRequest('direct_v2/inbox/?', login=login)
         return inbox
 
     def getv2Threads(self, thread, cursor=None):
@@ -991,11 +992,35 @@ class InstagramAPI:
             try:
                 self.LastResponse = response
                 self.LastJson = json.loads(response.text)
-                print(self.LastJson)
-                if 'error_type' in self.LastJson and self.LastJson['error_type'] == 'sentry_block':
-                    raise SentryBlockException(self.LastJson['message'])
-            except SentryBlockException:
-                raise
+                if self.LastResponse.status_code == 404 and self.LastJson.get('message') == 'User not found':
+                    raise UserNotFoundException(self.LastJson.get('message'))
+                elif self.LastResponse.status_code == 400:
+                    if self.LastJson.get('message') == 'Media not found or unavailable' or self.LastJson.get('message') == 'Media is unavailable':
+                        raise MediaNotFoundException(self.LastJson.get('message'))
+                    elif self.LastJson.get('message') == 'challenge_required':
+                        raise AccountBlockedException(self.LastJson.get('message'))
+                    elif self.LastJson.get('message') == 'The password you entered is incorrect. Please try again.':
+                        raise PasswordIncorrectException(self.LastJson.get('message'))
+                    elif self.LastJson.get('message') == 'login_required':
+                        raise LoginRequired(self.LastJson.get('message', ''))
+                    else:
+                        raise Exception(self.LastJson.get('message', ''))
+                elif self.LastResponse.status_code == 429 and self.LastJson.get('message') == 'Please wait a few minutes before you try again.':
+                    if login:
+                        return False
+                    else:
+                        raise LimitReachedException(self.LastJson.get('message', ''))
+                elif 'error_type' in self.LastJson and self.LastJson['error_type'] == 'sentry_block':
+                    raise SentryBlockException(self.LastJson.get('message'))
+                else:
+                    raise Exception(self.LastJson.get('message', ''))
+            except (AccountBlockedException, PasswordIncorrectException, SentryBlockException), e:
+                raise e
+            except Exception, e:
+                if login:
+                    return False
+                else:
+                    raise e
             except:
                 pass
             return False
