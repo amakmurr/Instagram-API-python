@@ -958,7 +958,7 @@ class InstagramAPI:
         body += u'--{boundary}--'.format(boundary=boundary)
         return body
 
-    def SendRequest(self, endpoint, post=None, login=False):
+    def SendRequest(self, endpoint, post=None, login=False, timeout=90):
         verify = False  # don't show request warning
 
         if (not self.isLoggedIn and not login):
@@ -974,9 +974,9 @@ class InstagramAPI:
         while True:
             try:
                 if (post is not None):
-                    response = self.s.post(self.API_URL + endpoint, data=post, verify=verify)
+                    response = self.s.post(self.API_URL + endpoint, data=post, verify=verify, timeout=timeout)
                 else:
-                    response = self.s.get(self.API_URL + endpoint, verify=verify)
+                    response = self.s.get(self.API_URL + endpoint, verify=verify, timeout=timeout)
                 break
             except Exception as e:
                 print('Except on SendRequest (wait 60 sec and resend): ' + str(e))
