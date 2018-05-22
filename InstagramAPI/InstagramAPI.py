@@ -1014,9 +1014,9 @@ class InstagramAPI:
                     raise SentryBlockException(self.LastJson.get('message'))
                 else:
                     raise Exception(self.LastJson.get('message', ''))
-            except (AccountBlockedException, PasswordIncorrectException, SentryBlockException), e:
+            except (AccountBlockedException, PasswordIncorrectException, SentryBlockException) as e:
                 raise e
-            except Exception, e:
+            except Exception as e:
                 if login:
                     return False
                 else:
