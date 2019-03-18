@@ -1,0 +1,7 @@
+# Python
+.git/*
+.idea/*
+*.pyc
+*.ini
+test*
+.fuse_hidden*
