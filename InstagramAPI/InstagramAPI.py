@@ -581,7 +581,7 @@ class InstagramAPI:
                            '_uid': self.username_id,
                            '_csrftoken': self.token,
                            'media_id': mediaId})
-        return self.SendRequest('media/' + str(mediaId) + '/info/', self.generateSignature(data))
+        return self.SendRequest('media/' + str(mediaId) + '/info/')
 
     def deleteMedia(self, mediaId, media_type=1):
         data = json.dumps({'_uuid': self.uuid,
