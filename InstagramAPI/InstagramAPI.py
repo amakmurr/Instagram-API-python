@@ -994,7 +994,7 @@ class InstagramAPI:
                 self.LastJson = json.loads(response.text)
                 if self.LastResponse.status_code == 404 and self.LastJson.get('message') == 'User not found':
                     raise UserNotFoundException(self.LastJson.get('message'))
-                elif self.LastResponse.status_code == 400:
+                elif self.LastResponse.status_code in [400, 403]:
                     if self.LastJson.get('message') == 'Media not found or unavailable' or self.LastJson.get('message') == 'Media is unavailable':
                         raise MediaNotFoundException(self.LastJson.get('message'))
                     elif self.LastJson.get('message') == 'challenge_required':

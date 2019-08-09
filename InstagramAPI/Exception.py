@@ -44,3 +44,9 @@ class SentryBlockException(Exception):
 
     def __init__(self, message):
         super(SentryBlockException, self).__init__(message)
+
+
+class AccountNotAvailableException(Exception):
+
+    def __init__(self, message='account not available'):
+        super(AccountNotAvailableException, self).__init__(message)

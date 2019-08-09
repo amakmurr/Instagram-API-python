@@ -10,8 +10,9 @@ setup(
     license='GNU',
     packages=['InstagramAPI'],
     zip_safe=False,
-    install_requires=[
-        "requests==2.11.1",
-        "requests-toolbelt==0.7.0",
-        "moviepy==0.2.3.2"
-    ])
+    # install_requires=[
+    #     "requests==2.11.1",
+    #     "requests-toolbelt==0.7.0",
+    #     "moviepy==0.2.3.2"
+    # ]
+)
